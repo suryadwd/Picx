@@ -229,16 +229,16 @@ export const bookmarkPost = async (req, res) => {
     const user = await User.findById(userId)
     if(!user) return res.status(404).json({message:"no user found"})
 
-    const isBookedMark = user.bookmarks.includes(postId)
+    const isBookedMark = user.bookmarks.includes(posts._id)
 
     if(!isBookedMark) {
-      user.bookmarks.push(postId)
+      user.bookmarks.push(posts._id)
       await user.save()
       return res.status(201).json({success:true,message:"bookmarked successfully"})
     }else{
-      user.bookmarks.pull(postId)
+      user.bookmarks.pull(posts._id)
       await user.save()
-      return res.status(201).json({success:true,message:"bookmarked successfully"})
+      return res.status(200).json({success:true,message:"unbookmarked successfully"})
     }
 
 
@@ -248,3 +248,4 @@ export const bookmarkPost = async (req, res) => {
   }
 
 }
+
