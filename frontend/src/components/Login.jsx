@@ -27,12 +27,6 @@ const Login = () => {
     try {
       setLoading(true);
 
-      if (!input.email || !input.password) {
-        toast.error("Email and password are required");
-        return;
-      }
-      
-
       const res = await axios.post(
         "http://localhost:8000/api/v1/user/login",
         input,
