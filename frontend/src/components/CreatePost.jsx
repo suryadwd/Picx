@@ -96,8 +96,8 @@ const CreatePost = ({ cre, setcre }) => {
               </Avatar>
 
               <div>
-                <h1 className="font-semibold text-xs">{user?.username || munaually }</h1>
-                <span className="text-gray-500 text-xs">{user?.bio||""}</span>
+                <h1 className="font-semibold text-xs">{user?.username }</h1>
+                <span className="text-gray-500 text-xs">{user?.bio}</span>
               </div>
             </div>
             <Textarea

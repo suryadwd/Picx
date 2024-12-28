@@ -8,7 +8,8 @@ import CommentDialog from "./CommentDialog";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { toast } from "sonner";
-import { setPosts } from "@/redux/postSlice";
+import { setPosts, setSelectedPost } from "@/redux/postSlice";
+import { Badge } from "./ui/badge";
 
 const Post = ({ post }) => {
   const [com, setcom] = useState("");
@@ -97,7 +98,8 @@ const Post = ({ post }) => {
   
       if (res.data.success) {
         // Update local comment state
-        const updatedCommentData = [...comment, res.data.comm];
+        //yaha  [...comment, res.data.comm] last me comment add kr rha hau
+        const updatedCommentData = [...comment, res.data.comment];
         setComment(updatedCommentData);
   
         // Update Redux post state
@@ -114,7 +116,7 @@ const Post = ({ post }) => {
     } catch (error) {
       console.log(error.message);
       toast.error(
-        error.response?.data?.message || "Failed to add comment. Try again."
+        error.response?.data?.message
       );
     }
   };
@@ -132,7 +134,10 @@ const Post = ({ post }) => {
             />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
-          <h3>{post?.user?.username || "this is manual username"}</h3>
+         <div className="flex gap-3 items-center">
+         <h1>{post?.user?.username || "this is manual username"}</h1>
+         { user._id === post.user._id &&  <Badge  className=" m-1 text-xs">Me</Badge>}
+         </div>
         </div>
 
         <Dialog>
@@ -184,7 +189,10 @@ const Post = ({ post }) => {
           )}
 
           <MessageCircle
-            onClick={() => setTogle(true)}
+            onClick={() =>{ 
+              setTogle(true)
+              dispatch(setSelectedPost(post))
+            }}
             className="cursor-pointer hover:text-gray-500"
             size={"22px"}
           />
@@ -207,12 +215,17 @@ const Post = ({ post }) => {
         {post?.caption || "this is done by manually"}
       </p>
 
-      <span
-        className="cursor-pointer text-gray-500"
-        onClick={() => setTogle(true)}
-      >
-        View all {post?.comments?.length} comments
-      </span>
+      {
+        comment.length > 0 && (<span
+          className="cursor-pointer text-gray-500"
+          onClick={() =>{ 
+            setTogle(true)
+            dispatch(setSelectedPost(post))
+          }}
+        >
+          View all {post?.comments?.length} comments
+        </span>)
+      }
 
       <CommentDialog toggle={toggle} setToggle={setTogle} />
 
