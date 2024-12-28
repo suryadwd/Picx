@@ -1,8 +1,9 @@
 import User from "../models/user.model.js"
+import Post from "../models/post.model.js"
 import bcrypt from "bcryptjs"
 import { generateTokenAndSetCookies } from "../utils/token.js"
 import streamifier from "streamifier"
-
+import cloudinary from "../config/cloudDb.js"
 
 export const register = async (req, res)  => {
 
@@ -34,7 +35,7 @@ export const register = async (req, res)  => {
 
     generateTokenAndSetCookies(payload,res)
 
-    return res.status(201).json({success:true,message:"user created"})
+    return res.status(201).json({success:true,message:"user created",data:newUser})
 
 
   } catch (error) {
@@ -46,43 +47,55 @@ export const register = async (req, res)  => {
 }
 
 export const login = async (req, res) => {
- 
   try {
-      
-    const {email, password} = req.body
+    const { email, password } = req.body;
 
-    if(!email || !password) 
-      return res.status(400).json({message:"all fields are requires"})
+    if (!email || !password) 
+      return res.status(400).json({ message: "All fields are required" });
 
-    const user = await User.findOne({email})
-  
-    if(!user) return res.status(404).json({message:"user not exisiting"})
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not existing" });
 
-    const passCheck = await bcrypt.compare(password,user.password)
+    const passCheck = await bcrypt.compare(password, user.password);
+    if (!passCheck) return res.status(404).json({ message: "Password invalid" });
 
-    if(!passCheck) return res.status(404).json({message:"password invalid"})
+    // Populating posts and ensuring valid user reference
+    const populatePost = await Promise.all(
+      user.posts.map(async (postId) => {
+        const post = await Post.findById(postId);
+        
+        // Check if post exists and user field is valid
+        if (post && post.user && post.user.equals(user._id)) {
+          return post;
+        }
+        return null; // If post is not valid or user is incorrect, return null
+      })
+    );
 
-      const payload = {
-        _id:user._id,
-        email:user.email,
-        username:user.username,
-        profilePicture:user.profilePicture,
-        bio:user.bio,
-        gender:user.gender,
-        followers:user.followers,
-        following:user.following,
-        posts:user.posts
-      }
-  
-      generateTokenAndSetCookies(payload,res)
-    
-      return res.status(200).json({success:true,message:"logged in",user})
+    // Filter out invalid (null) posts
+    const validPosts = populatePost.filter((post) => post !== null);
 
+    const payload = {
+      _id: user._id,
+      email: user.email,
+      username: user.username,
+      profilePicture: user.profilePicture,
+      bio: user.bio,
+      gender: user.gender,
+      followers: user.followers,
+      following: user.following,
+      posts: validPosts,
+    };
+
+    generateTokenAndSetCookies(payload, res);
+
+    return res.status(200).json({ success: true, message: "Logged in", user: payload });
   } catch (error) {
-    return res.status(500).json({message:error.message})
+    console.log(error);
+    return res.status(500).json({ message: error.message });
   }
+};
 
-}
 
 export const logout = async (req, res) => {
   try {

@@ -1,7 +1,8 @@
-import User from "../models/user.model"
+import User from "../models/user.model.js"
 import Post from "../models/post.model.js"
 import streamifier from "streamifier"
 import Comment from "../models/comment.model.js"
+import cloudinary from "../config/cloudDb.js"
 
 export const createPost = async (req, res) => {
 
@@ -11,7 +12,7 @@ export const createPost = async (req, res) => {
 
     const image = req.file
   
-    const caption = req.body
+    const caption = req.body.caption
   
     if(!image) return res.status(401).json({Message:"image required"})
   
@@ -33,7 +34,7 @@ export const createPost = async (req, res) => {
             });
           };
     
-          cloudResponse = await uploadStream(image.buffer); // Use buffer directly
+          cloudResponse = await uploadStream(image.buffer); 
         }
   
     const user = await User.findById(userId)
@@ -49,59 +50,66 @@ export const createPost = async (req, res) => {
       await user.save()
     }
 
-    await post.populate({path:'author',select:"-password"})
+    await post.populate({path:'user',select:"-password"})
     
     return res.status(201).json({success:true,message:"post created",post})
 
-  } catch (error) {
-    
-  }
-
-}
-
-export const getAllPost = async (req, res) => {
-
-  try {
-    const posts = await Post.find()
-    .sort({ createdAt: -1 })
-    .populate({ path: "user", select: "-password" })
-    .populate({
-      path: "comments",
-     sort: { createdAt: -1 } , // Use options for sort on populated fields
-      populate: { path: "user", select: "-password" },
-    }); 
-    if(!posts) return res.status(404).json({message:"no post"})
-    return res.status(200).json({success:true,posts})
   } catch (error) {
     return res.status(500).json({message:error.message}) 
   }
 
 }
 
-export const getUserPost = async (req, res) => {
-
+export const getAllPost = async (req, res) => {
   try {
-    const userId = req.user._id
-
-  const post = await Post.findById(userId).sort({createdAt:-1}).populate({
-    path:"user",
-    select:("-password")
-  }).populate({
-    path:"comments",
-    select:("-password")
-  })
-
-  if(!post) return res.status(404).json({message:"no post from user"})
-
-    return res.status(200).json({success:true, post})
-
+      const posts = await Post.find().sort({ createdAt: -1 })
+          .populate({ path: 'user', select: 'username profilePicture' })
+          .populate({
+              path: 'comments',
+              sort: { createdAt: -1 },
+              populate: {
+                  path: 'user',
+                  select: ' username profilePicture'
+              }
+          });
+      return res.status(200).json({
+          posts,
+          success: true
+      })
   } catch (error) {
-    return res.status(500).json({message:error.message})
-  }
-
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error", success: false });
 }
 
-export const like = async (req, res) => {
+};
+
+export const getUserPost = async (req, res) => {
+  try {
+    const userId = req.user._id; 
+    
+    const posts = await Post.find({ user: userId }) 
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "user",
+        select: "username profilePicture",
+      })
+      .populate({
+        path: "comments",
+        select: "username profilePicture", 
+      });
+
+    if (!posts || posts.length === 0) {
+      return res.status(404).json({ message: "No posts found for this user" });
+    }
+
+    return res.status(200).json({ success: true, posts });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const likeUnlike = async (req, res) => {
   try {
     
     const userId = req.user._id
@@ -112,15 +120,14 @@ export const like = async (req, res) => {
 
     if(!post) return res.status(404).json({message:"no post found"})
 
-    const isLike = await Post.likes.include(userId)
+    const isLike = await post.likes.includes(userId)
 
     if(!isLike){
-      await Post.findByIdAndUpdate(postId,{$push:{likes:userId}},{new:true})
-
-      return res.status(201).json({message:"You likes the post"})
+      const updatedPost = await Post.findByIdAndUpdate(postId,{$push:{likes:userId}},{new:true})
+      return res.status(201).json({success:true,message:"You liked" , updatedPost})
     }else{
-      await Post.findByIdAndUpdate(postId,{$pull:{likes:userId}},{new:true})
-      return res.status(201).json({message:"You dislikes the post"}) 
+      const updatedPost = await Post.findByIdAndUpdate(postId,{$pull:{likes:userId}},{new:true})
+      return res.status(201).json({success:true,message:"You dislikes" , updatedPost}) 
     }
 
   } catch (error) {
@@ -134,38 +141,41 @@ export const addComment = async (req, res) => {
     
   const postId = req.params.id
   
-  const userId = req.body._id
+  const userId = req.user._id
 
   const {text} = req.body
 
   const post = await Post.findById(postId)
 
   if(!post)
-  res.status(404).json({message:"POst not found"})
+  return res.status(404).json({message:"POst not found"})
 
 
   if(!text)
-  res.status(404).json({message:"text is required"})
+  return res.status(404).json({message:"text is required"})
 
-  const comm = new Comment({userId,text,postId}).populate({
+  const comm = new Comment({userId,text,postId})
+
+  await comm.save()
+
+  await comm.populate({
     path:'user',
     select:("-password")
   })
 
-  await comm.save()
-
   if(comm){
-     Post.comments.push(comm._id)
-     await Post.save()
+     post.comments.push(comm._id)
+     await post.save()
   }
 
-  res.status(404).json({success:true,comm})
+  res.status(200).json({success:true,comm,message:"comment added successfully"})
 
   } catch (error) {
     return res.status(500).json({message:error.message})
   }
 
 }
+
 
 export const getCommentsFromPost = async (req, res) => {
 
@@ -184,35 +194,39 @@ export const getCommentsFromPost = async (req, res) => {
 
 }
 
-export const deletePost = async (req, res) => {
+ 
+export const deletePost = async (req,res) => {
+  try {
+      const postId = req.params.id;
+      const userId = req.user._id;
 
- try {
-  const postId = req.params.id
-  
-  const userId = req.params._id
+      // console.log("post Id",postId);
+      // console.log("user Id",userId);
 
-  const posts = await Post.findById(postId)
-  if(!posts) return res.status(404).json({message:"no post found"})
+      const post = await Post.findById(postId);
+      if(!post) return res.status(404).json({message:'Post not found', success:false});
 
-  if(posts.user.toString() !== userId) return  res.status(404).json({success:true,message:"unothorized"})
+      
 
-  await Post.findByIdAndDelete(postId)
+      // delete post
+      await Post.findByIdAndDelete(postId);
 
-  const user = await User.findById(userId)
+      // remove the post id from the user's post
+      let user = await User.findById(userId);
+      user.posts = user.posts.filter(id => id.toString() !== postId);
+      await user.save();
 
-  await user.posts.pull(postId)
+      // delete associated comments
+      await Comment.deleteMany({post:postId});
 
-  await user.save()
+      return res.status(200).json({
+          success:true,
+          message:'Post deleted'
+      })
 
-  Comment.deleteMany({ post: postId })
-
-  return res.status(200).json({success:true,message:"post deleted"})
- } catch (error) {
-  return res.status(500).json({message:error.message})
- }
-
-
-
+  } catch (error) {
+      console.log(error);
+  }
 }
 
 export const bookmarkPost = async (req, res) => {

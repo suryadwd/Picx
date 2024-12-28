@@ -2,7 +2,9 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import userModel from "../models/user.model.js";
 dotenv.config();
+
 export const protectRoute = async (req, res, next) => {
+  
   try {
     const token = req.cookies.jwt;
 
@@ -21,7 +23,7 @@ export const protectRoute = async (req, res, next) => {
     next();
 
   } catch (error) {
-    console.log("Error in protectRoute middleware", err.message);
+    console.log("Error in protectRoute middleware", error.message);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
