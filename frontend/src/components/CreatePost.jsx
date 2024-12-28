@@ -62,7 +62,16 @@ const CreatePost = ({ cre, setcre }) => {
         }) 
 
           if(res.data.success){
-            dispatch(setPosts([...posts,res.data.posts]))
+
+            //i have to refresh the page againa an again so i just fetch the data again
+            // and dispatch it to the post array in  poststore
+
+            const updatedPosts = await axios.get("http://localhost:8000/api/v1/post/all", {
+              withCredentials: true,
+            });
+            dispatch(setPosts(updatedPosts.data.posts));
+
+            // dispatch(setPosts([res.data.posts,...posts]))
             toast.success(res.data.message)
             setcre(false)
           }
