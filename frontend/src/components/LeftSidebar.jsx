@@ -21,13 +21,12 @@ import CreatePost from "./CreatePost";
 const LeftSidebar = () => {
   const { user } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
-
   const item = [
     { icon: <Home />, text: "Home" },
     { icon: <Search />, text: "Search" },
     { icon: <TrendingUp />, text: "Explore" },
     { icon: <MessageCircle />, text: "Message" },
-    { icon: <Heart />, text: "Notification" },
+    // { icon: <Heart />, text: "Notification" },
     { icon: <PlusSquare />, text: "Create" },
     {
       icon: (
@@ -69,6 +68,7 @@ const LeftSidebar = () => {
     if (value === "Create") createStaticHandler();
     if(value === "Profile") navigate(`/profile/${user?._id}`)
     if(value === "Home") navigate('/')
+    if(value === "Message") navigate('/chat')
   };
 
   return (
@@ -86,6 +86,13 @@ const LeftSidebar = () => {
               >
                 {items.icon}
                 <span>{items.text}</span>
+
+                  {/* added btween */}
+
+
+                    
+                  {/* this */}
+
               </div>
             );
           })}

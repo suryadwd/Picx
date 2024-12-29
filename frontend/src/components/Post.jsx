@@ -122,6 +122,17 @@ const Post = ({ post }) => {
   };
   
 
+  const bookmarkHandler = async () => {
+    try {
+        const res = await axios.get(`http://localhost:8000/api/v1/post/bookmark/${post?._id}`, {withCredentials:true});
+        if(res.data.success){
+            toast.success(res.data.message);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
   return (
     <div className="my-8 w-full max-w-sm mx-auto">
       <div className="flex items-center justify-between">
@@ -145,9 +156,13 @@ const Post = ({ post }) => {
             <MoreHorizontal className="cursor-pointer" />
           </DialogTrigger>
           <DialogContent>
-            <Button variant="ghost" className="cursor-pointer w-full font-bold">
+            {
+              
+              (user?._id !== post?.user?._id) &&( <Button variant="ghost" className="cursor-pointer w-full font-bold">
               unfollow
-            </Button>
+            </Button>)
+
+            }
             <Button variant="ghost" className="cursor-pointer w-full font-bold">
               Add to favourite
             </Button>
@@ -201,6 +216,7 @@ const Post = ({ post }) => {
 
         <div className="flex ml-7">
           <Bookmark
+          onClick={bookmarkHandler}
             className="cursor-pointer hover:text-gray-500"
             size={"22px"}
           />
