@@ -67,6 +67,8 @@ const LeftSidebar = () => {
   const handelOnClick = (value) => {
     if (value === "Logout") logoutHandler();
     if (value === "Create") createStaticHandler();
+    if(value === "Profile") navigate(`/profile/${user?._id}`)
+    if(value === "Home") navigate('/')
   };
 
   return (

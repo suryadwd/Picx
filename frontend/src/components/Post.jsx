@@ -136,7 +136,7 @@ const Post = ({ post }) => {
           </Avatar>
          <div className="flex gap-3 items-center">
          <h1>{post?.user?.username || "this is manual username"}</h1>
-         { user._id === post.user._id &&  <Badge  className=" m-1 text-xs">Me</Badge>}
+         { user?._id === post?.user?._id &&  <Badge  className=" m-1 text-xs">Me</Badge>}
          </div>
         </div>
 
