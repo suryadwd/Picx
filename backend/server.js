@@ -8,7 +8,13 @@ import messageRoute from "./routes/message.route.js"
 import { dbConnect } from "./config/db.js"
 import cloudinary from "./config/cloudDb.js"
 import userRoute from "../backend/routes/user.route.js"
-const app = express()
+import { app, server } from "./socket/socket.js";
+
+
+//socket js se layege ab
+// const app = express()
+
+
 dotenv.config()
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -26,7 +32,9 @@ app.use("/api/v1/post",postRoute)
 app.use("/api/v1/message",messageRoute)
 
 
-app.listen(process.env.PORT, () => {
+//ab app.listen ki jagah server.listen hoga
+
+server.listen(process.env.PORT, () => {
   console.log(`server running ${process.env.PORT}`)
   dbConnect()
   cloudinary

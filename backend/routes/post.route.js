@@ -11,6 +11,6 @@ router.get("/like/:id", protectRoute, likeUnlike)
 router.post("/comment/:id",protectRoute, addComment)
 router.post("/comment/all/:id",protectRoute, getCommentsFromPost)
 router.delete("/delete/:id",protectRoute,deletePost)
-router.post("/bookmark/:id",protectRoute,bookmarkPost)
+router.get("/bookmark/:id",protectRoute,bookmarkPost)
 
 export default router

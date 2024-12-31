@@ -111,7 +111,7 @@ export const getProfile = async (req, res) => {
     // const {username} = req.params
   const userId = req.params.id
 
-  let user = await User.findById(userId).select("-password")
+  let user = await User.findById(userId).populate({path:"posts",createdAt:-1}).populate('bookmarks')
 
   if(!user)   return res.status(401).json({message:"user not found"})
 
@@ -160,7 +160,7 @@ export const editProfile = async (req, res) => {
 
     await user.save();
 
-    return res.status(201).json({ message: "updated successfully", user });
+    return res.status(201).json({success:true ,message: "updated successfully", user });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -170,7 +170,7 @@ export const getSuggestedUsers = async (req, res) => {
   try {
     const suggestedUsers = await User.find({_id:{$ne:req.user._id}}).select("-password");
     if(suggestedUsers.length === 0) return res.status(404).json({message:"no user exist"})
-    return res.status(200).json(suggestedUsers)
+    return res.status(200).json({success:true, users:suggestedUsers}) 
   } catch (error) {
     return res.status(500).json({message:error.message})
   }

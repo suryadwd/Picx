@@ -3,6 +3,7 @@ import Post from "../models/post.model.js"
 import streamifier from "streamifier"
 import Comment from "../models/comment.model.js"
 import cloudinary from "../config/cloudDb.js"
+import { getReceiverSocketId } from "../socket/socket.js"
 
 export const createPost = async (req, res) => {
 
@@ -130,6 +131,23 @@ export const likeUnlike = async (req, res) => {
       return res.status(201).json({success:true,message:"You dislikes" , updatedPost}) 
     }
 
+    const user = await User.findById(userId).select('username profilePicture')
+    const postOwnerId = post.user.toString()
+
+    if(postOwnerId !== userId){{
+      const notification = {
+        userId:userId,
+        postId:postOwnerId,
+        type:"like",
+        message:`check this`,
+      }
+
+      const postOwnerSocketId = getReceiverSocketId(postOwnerId)
+      io.to(postOwnerSocketId).emit('newNotification',notification)
+
+      }
+    }
+
   } catch (error) {
         return res.status(500).json({message:error.message})
   }
@@ -145,33 +163,37 @@ export const addComment = async (req, res) => {
 
   const {text} = req.body
 
-  const post = await Post.findById(postId)
-
-  if(!post)
-  return res.status(404).json({message:"POst not found"})
-
-
-  if(!text)
-  return res.status(404).json({message:"text is required"})
-
-  const comm = new Comment({userId,text,postId})
-
-  await comm.save()
-
-  await comm.populate({
-    path:'user',
-    select:("-password")
-  })
-
-  if(comm){
-     post.comments.push(comm._id)
-     await post.save()
+  
+  if (!postId) {
+    return res.status(400).json({ message: 'Missing postId' });
   }
 
-  res.status(200).json({success:true,comm,message:"comment added successfully"})
+  if ( !userId) {
+    return res.status(400).json({ message: 'Missing userId' });
+  }
 
+  if ( !text) {
+    return res.status(400).json({ message: 'Missing text' });
+  }
+
+  const post = await Post.findById(postId)
+  if (!post) {
+    return res.status(404).json({ message: 'Post not found' });
+  }
+
+  const newComment = new Comment({ user:userId, text, post:postId });
+  await newComment.save();
+
+
+  await newComment.populate({ path: 'user', select: '-password' });
+
+  post.comments.push(newComment._id);
+    await post.save();
+
+    res.status(200).json({ success: true, comment: newComment, message: 'Comment added successfully' });
   } catch (error) {
-    return res.status(500).json({message:error.message})
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 
 }
@@ -263,3 +285,28 @@ export const bookmarkPost = async (req, res) => {
 
 }
 
+// export const bookmarkPost = async (req,res) => {
+//   try {
+//       const postId = req.params.id;
+//       const authorId = req.id;
+//       const post = await Post.findById(postId);
+//       if(!post) return res.status(404).json({message:'Post not found', success:false});
+      
+//       const user = await User.findById(authorId);
+//       if(user.bookmarks.includes(post._id)){
+//           // already bookmarked -> remove from the bookmark
+//           await user.updateOne({$pull:{bookmarks:post._id}});
+//           await user.save();
+//           return res.status(200).json({type:'unsaved', message:'Post removed from bookmark', success:true});
+
+//       }else{
+//           // bookmark krna pdega
+//           await user.updateOne({$addToSet:{bookmarks:post._id}});
+//           await user.save();
+//           return res.status(200).json({type:'saved', message:'Post bookmarked', success:true});
+//       }
+
+//   } catch (error) {
+//       console.log(error);
+//   }
+// }

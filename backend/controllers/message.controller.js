@@ -1,8 +1,10 @@
 import Conversation from "../models/conversation.model.js"
 import User from "../models/user.model.js"
 import Message from "../models/message.model.js"
+import { getReceiverSocketId, io } from "../socket/socket.js"
 
 
+//check this
 export const sendMessage = async (req, res) => {
   try {
     
@@ -10,7 +12,7 @@ export const sendMessage = async (req, res) => {
 
     const receverId = req.params.id
 
-    const {message} = req.body
+    const {textMessage:message} = req.body
 
     const sender = await User.findById(senderId)
     if(!sender) return res.status(404).json({message:"Sender is invalid"})
@@ -30,7 +32,13 @@ export const sendMessage = async (req, res) => {
     await newMessage.save()
 
     if(newMessage){
-      conversation.message.push(newMessage._id)
+      conversation.messages.push(newMessage._id)
+      await conversation.save()
+    }
+
+    const receiverSocketId = getReceiverSocketId(receverId);
+    if(receiverSocketId){
+        io.to(receiverSocketId).emit('newMessage', newMessage);
     }
 
     return res.status(201).json({
@@ -43,6 +51,7 @@ export const sendMessage = async (req, res) => {
 
 }
 
+
 export const getMessage = async (req, res) => {
   
   try {
@@ -50,9 +59,9 @@ export const getMessage = async (req, res) => {
     const senderId = req.user._id
     const receiverId = req.params.id
 
-    const conversation = await Conversation.find({participants:{$all:[senderId,receiverId]}})
+    const conversation = await Conversation.findOne({participants:{$all:[senderId,receiverId]}})
 
-    if(!conversation) return res.status(200).json({success:true, message:[]})
+    if(!conversation) return res.status(200).json({success:true, message:[]}).populate('messages')
 
     return res.status(200).json({success:true, message:conversation.messages})
 
@@ -61,3 +70,6 @@ export const getMessage = async (req, res) => {
   }
 
 }
+
+
+
