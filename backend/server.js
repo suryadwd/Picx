@@ -20,7 +20,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://picx-kzg6.onrender.com"],
+  origin: [
+    "http://localhost:5173",
+    "https://picx-kzg6.onrender.com",
+    "https://picx-git-main-suryakant-dwivedis-projects.vercel.app",
+  ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
