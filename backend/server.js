@@ -22,12 +22,17 @@ app.use(cookieParser());
 const corsOptions = {
   origin: ["http://localhost:5173", "https://picx-kzg6.onrender.com"],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-  exposedHeaders: ["Set-Cookie"],
+  exposedHeaders: ["set-cookie"],
   preflightContinue: true,
 };
+
+// Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options("*", cors(corsOptions));
 
 app.set("trust proxy", 1); // trust first proxy
 
