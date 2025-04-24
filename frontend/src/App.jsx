@@ -61,7 +61,7 @@ function App() {
 
   useEffect(() => {
     if (user) {
-      const socketio = io('http://localhost:8000', {
+      const socketio = io('https://picx-kzg6.onrender.com', {
         query: {
           userId: user?._id
         },
