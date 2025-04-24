@@ -168,7 +168,7 @@ export const editProfile = async (req, res) => {
 
 export const getSuggestedUsers = async (req, res) => {
   try {
-    const suggestedUsers = await User.find({_id:{$ne:req.user._id}}).select("-password");
+    const suggestedUsers = await User.find({_id:{$ne:req.user.id}}).select("-password");
     if(suggestedUsers.length === 0) return res.status(404).json({message:"no user exist"})
     return res.status(200).json({success:true, users:suggestedUsers}) 
   } catch (error) {

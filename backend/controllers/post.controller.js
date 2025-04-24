@@ -11,6 +11,8 @@ export const createPost = async (req, res) => {
     
     const userId = req.user._id
 
+    console.log(userId)
+
     const image = req.file
   
     const caption = req.body.caption

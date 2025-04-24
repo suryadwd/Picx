@@ -36,6 +36,9 @@ const Post = ({ post }) => {
           withCredentials: true,
         }
       );
+      
+      
+      
       if (res.data.success) toast.success(res.data.message);
       const updatedPostData = posts.filter(
         (postitems) => postitems._id !== post._id

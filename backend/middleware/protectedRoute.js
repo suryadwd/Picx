@@ -18,6 +18,7 @@ export const protectRoute = async (req, res, next) => {
 
     if (!user) return res.status(401).json({ Message: "payload not found" });
 
+
     req.user = user;
 
     next();

@@ -26,8 +26,6 @@ const rootReducer = combineReducers({
   post:postSlice,
   socketio:socketSlice,
   chat:chatSlice,
-  
-
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
