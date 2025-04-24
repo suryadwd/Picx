@@ -24,18 +24,29 @@ const corsOptions = {
     "http://localhost:5173",
     "https://picx-kzg6.onrender.com",
     "https://picx-git-main-suryakant-dwivedis-projects.vercel.app",
+    "https://picx-15hxt9c40-suryakant-dwivedis-projects.vercel.app",
+    "https://picx-15hxt-9c40-suryakant-dwivedis-projects.vercel.app",
+    "https://picx.devsurya.space",
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Cookie",
+    "Accept",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Credentials",
+  ],
   exposedHeaders: ["set-cookie"],
-  preflightContinue: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 200,
 };
 
-// Apply CORS middleware
+// Apply CORS middleware with updated options
 app.use(cors(corsOptions));
 
-// Handle preflight requests
+// Handle preflight requests for all routes
 app.options("*", cors(corsOptions));
 
 app.set("trust proxy", 1); // trust first proxy
