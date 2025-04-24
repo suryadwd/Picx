@@ -1,69 +1,67 @@
-import User from "../models/user.model.js"
-import Post from "../models/post.model.js"
-import bcrypt from "bcryptjs"
-import { generateTokenAndSetCookies } from "../utils/token.js"
-import streamifier from "streamifier"
-import cloudinary from "../config/cloudDb.js"
+import User from "../models/user.model.js";
+import Post from "../models/post.model.js";
+import bcrypt from "bcryptjs";
+import { generateTokenAndSetCookies } from "../utils/token.js";
+import streamifier from "streamifier";
+import cloudinary from "../config/cloudDb.js";
 
-export const register = async (req, res)  => {
-
+export const register = async (req, res) => {
   try {
-    
-    const {email, password, username} = req.body
+    const { email, password, username } = req.body;
 
-    if(!email || !password || !username) 
-    return res.status(400).json({message:"all fields are requires"})
+    if (!email || !password || !username)
+      return res.status(400).json({ message: "all fields are requires" });
 
-    const user = await  User.findOne({username})
-    if(user) return res.status(400).json({message:"username is already taken"})
+    const user = await User.findOne({ username });
+    if (user)
+      return res.status(400).json({ message: "username is already taken" });
 
-    const Existinguser = await User.findOne({email})
+    const Existinguser = await User.findOne({ email });
 
-    if(Existinguser) return res.status(400).json({message:"email is register. Try login"})
+    if (Existinguser)
+      return res.status(400).json({ message: "email is register. Try login" });
 
-    const hashPassword = await bcrypt.hash(password,10)
+    const hashPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({email,username,password:hashPassword})
+    const newUser = new User({ email, username, password: hashPassword });
 
-    await newUser.save()
+    await newUser.save();
 
     const payload = {
-      _id:newUser._id,
-      email:newUser.email,
-      username:newUser.username
-    }
+      _id: newUser._id,
+      email: newUser.email,
+      username: newUser.username,
+    };
 
-    generateTokenAndSetCookies(payload,res)
+    generateTokenAndSetCookies(payload, res);
 
-    return res.status(201).json({success:true,message:"user created",data:newUser})
-
-
+    return res
+      .status(201)
+      .json({ success: true, message: "user created", data: newUser });
   } catch (error) {
-    return res.status(500).json({message:error.message})
+    return res.status(500).json({ message: error.message });
   }
-
-
-
-}
+};
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) 
+    if (!email || !password)
       return res.status(400).json({ message: "All fields are required" });
 
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not existing" });
 
     const passCheck = await bcrypt.compare(password, user.password);
-    if (!passCheck) return res.status(404).json({ message: "Password invalid" });
+    if (!passCheck)
+      return res.status(404).json({ message: "Password invalid" });
 
     // Populating posts and ensuring valid user reference
     const populatePost = await Promise.all(
       user.posts.map(async (postId) => {
         const post = await Post.findById(postId);
-        
+
         // Check if post exists and user field is valid
         if (post && post.user && post.user.equals(user._id)) {
           return post;
@@ -89,39 +87,42 @@ export const login = async (req, res) => {
 
     generateTokenAndSetCookies(payload, res);
 
-    return res.status(200).json({ success: true, message: "Logged in", user: payload });
+    return res
+      .status(200)
+      .json({ success: true, message: "Logged in", user: payload });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };
 
-
 export const logout = async (req, res) => {
   try {
-    return res.cookie("jwt","",{maxAge:0}).status(200).json({success:true,message:"logged out successfully"})
+    return res
+      .cookie("jwt", "", { maxAge: 0 })
+      .status(200)
+      .json({ success: true, message: "logged out successfully" });
   } catch (error) {
-    return res.status(500).json({message:error.message})
+    return res.status(500).json({ message: error.message });
   }
-}
+};
 
 export const getProfile = async (req, res) => {
-
   try {
     // const {username} = req.params
-  const userId = req.params.id
+    const userId = req.params.id;
 
-  let user = await User.findById(userId).populate({path:"posts",createdAt:-1}).populate('bookmarks')
+    let user = await User.findById(userId)
+      .populate({ path: "posts", createdAt: -1 })
+      .populate("bookmarks");
 
-  if(!user)   return res.status(401).json({message:"user not found"})
+    if (!user) return res.status(401).json({ message: "user not found" });
 
-  return res.status(200).json({success:true,user})
+    return res.status(200).json({ success: true, user });
   } catch (error) {
-  return res.status(500).json({message:error.message})
+    return res.status(500).json({ message: error.message });
   }
-
-
-}
+};
 
 export const editProfile = async (req, res) => {
   try {
@@ -132,15 +133,13 @@ export const editProfile = async (req, res) => {
     if (profilePicture) {
       const uploadStream = (buffer) => {
         return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            (error, result) => {
-              if (result) {
-                resolve(result);
-              } else {
-                reject(error);
-              }
+          const stream = cloudinary.uploader.upload_stream((error, result) => {
+            if (result) {
+              resolve(result);
+            } else {
+              reject(error);
             }
-          );
+          });
           streamifier.createReadStream(buffer).pipe(stream);
         });
       };
@@ -160,60 +159,91 @@ export const editProfile = async (req, res) => {
 
     await user.save();
 
-    return res.status(201).json({success:true ,message: "updated successfully", user });
+    return res
+      .status(201)
+      .json({ success: true, message: "updated successfully", user });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
-}
+};
 
 export const getSuggestedUsers = async (req, res) => {
   try {
-    const suggestedUsers = await User.find({_id:{$ne:req.user.id}}).select("-password");
-    if(suggestedUsers.length === 0) return res.status(404).json({message:"no user exist"})
-    return res.status(200).json({success:true, users:suggestedUsers}) 
+    // Find all users except the current user
+    const allUsers = await User.find({ _id: { $ne: req.user._id } }).select(
+      "-password"
+    );
+
+    if (allUsers.length === 0) {
+      return res.status(404).json({ message: "No users exist" });
+    }
+
+    // Randomly select 6 users
+    let suggestedUsers = [];
+    if (allUsers.length <= 6) {
+      suggestedUsers = allUsers;
+    } else {
+      // Shuffle array and take first 6
+      suggestedUsers = allUsers.sort(() => Math.random() - 0.5).slice(0, 6);
+    }
+
+    return res.status(200).json({ success: true, users: suggestedUsers });
   } catch (error) {
-    return res.status(500).json({message:error.message})
+    console.error("Error in getSuggestedUsers:", error);
+    return res.status(500).json({ message: error.message });
   }
-}
+};
 
 export const follow = async (req, res) => {
-  
   try {
-    
-    const {id:userId} = req.params
+    const { id: userId } = req.params;
 
-    const currentUserId = req.user._id
- 
-    const userToModify = await User.findById(userId)
-    if(!userToModify) return res.status(404).json({message:"User to follow  not existing"})
+    const currentUserId = req.user._id;
 
-    const currentUser = await User.findById(currentUserId)
-    if(!currentUser) return res.status(404).json({message:"current user is not existing"})
-    
+    const userToModify = await User.findById(userId);
+    if (!userToModify)
+      return res.status(404).json({ message: "User to follow  not existing" });
+
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser)
+      return res.status(404).json({ message: "current user is not existing" });
+
     // if(userId === currentUserId.toString()) return res.json({message:"you cant follow yourself"})
-    if(userId === currentUserId) return res.json({message:"you cant follow yourself"})
+    if (userId === currentUserId)
+      return res.json({ message: "you cant follow yourself" });
 
-    
-    const isFollowing = currentUser.following.includes(userToModify._id)
+    const isFollowing = currentUser.following.includes(userToModify._id);
 
-    if(!isFollowing){
+    if (!isFollowing) {
       //push follower in userToModify
-        await User.findByIdAndUpdate(userId,{$push:{followers:currentUserId}},{new:true})
+      await User.findByIdAndUpdate(
+        userId,
+        { $push: { followers: currentUserId } },
+        { new: true }
+      );
       //push following in currentUser
-        await User.findByIdAndUpdate(currentUserId,{$push:{following:userId}},{new:true})
-        return res.status(200).json({message:"Following"})
-    }else{
+      await User.findByIdAndUpdate(
+        currentUserId,
+        { $push: { following: userId } },
+        { new: true }
+      );
+      return res.status(200).json({ message: "Following" });
+    } else {
       //pull followe in userToModify
-      await User.findByIdAndUpdate(userId,{$pull:{followers:currentUserId}},{new:true})
+      await User.findByIdAndUpdate(
+        userId,
+        { $pull: { followers: currentUserId } },
+        { new: true }
+      );
       //pull following in currentUser
-      await User.findByIdAndUpdate(currentUserId,{$pull:{following:userId}},{new:true})
-      return res.status(200).json({message:"Unfolowing"})
+      await User.findByIdAndUpdate(
+        currentUserId,
+        { $pull: { following: userId } },
+        { new: true }
+      );
+      return res.status(200).json({ message: "Unfolowing" });
     }
-    
-
   } catch (error) {
-    return res.status(500).json({message:error.message})   
+    return res.status(500).json({ message: error.message });
   }
-
-}
-
+};

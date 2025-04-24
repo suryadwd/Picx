@@ -1,10 +1,8 @@
 import { Server } from "socket.io";
 import express from "express";
 import http from "http";
-import exp from "constants";
 
 const app = express();
-
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -12,14 +10,10 @@ const io = new Server(server, {
     origin: ["http://localhost:5173", "https://picx-kzg6.onrender.com"],
     methods: ["GET", "POST"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   },
-  cookie: {
-    name: "jwt",
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-  },
+  transports: ["websocket", "polling"],
+  pingTimeout: 60000,
+  path: "/socket.io/",
 });
 
 const userSocketMap = {}; //har userId => socketId hoga jab wo app use kregatabhi
@@ -31,23 +25,21 @@ io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
   if (userId) {
     userSocketMap[userId] = socket.id;
-    console.log(`user connected: userId: ${userId}, socketId: ${socket.id}`);
+    console.log(`User connected: userId: ${userId}, socketId: ${socket.id}`);
+
+    // Emit online users immediately after connection
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
   }
 
-  //user online status emit krega jo client me dekhe ga
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
-
   //logout the soccket id needs to be deleted
-
   socket.on("disconnect", () => {
     if (userId) {
       console.log(
-        `user disconnected: userId: ${userId}, socketId: ${socket.id}`
+        `User disconnected: userId: ${userId}, socketId: ${socket.id}`
       );
       delete userSocketMap[userId];
+      io.emit("getOnlineUsers", Object.keys(userSocketMap));
     }
-
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
 
