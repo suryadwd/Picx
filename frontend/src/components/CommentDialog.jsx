@@ -44,7 +44,7 @@ const CommentDialog = ({ toggle, setToggle }) => {
   const sendCommenthandler = async () => {
     try {
       const res = await axios.post(
-        `http://localhost:8000/api/v1/post/comment/${SelectedPost._id}`,
+        `https://picx-kzg6.onrender.com/api/v1/post/comment/${SelectedPost._id}`,
         { text: com },
         {
           headers: {

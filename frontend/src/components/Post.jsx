@@ -31,7 +31,7 @@ const Post = ({ post }) => {
   const postDeleteHandler = async () => {
     try {
       const res = await axios.delete(
-        `http://localhost:8000/api/v1/post/delete/${post._id}`,
+        `https://picx-kzg6.onrender.com/api/v1/post/delete/${post._id}`,
         {
           withCredentials: true,
         }
@@ -57,7 +57,7 @@ const Post = ({ post }) => {
   const likeUnlikeHandler = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:8000/api/v1/post/like/${post._id}`,
+        `https://picx-kzg6.onrender.com/api/v1/post/like/${post._id}`,
         { withCredentials: true }
       );
       if (res.data.success) {
@@ -89,7 +89,7 @@ const Post = ({ post }) => {
   const commentHandler = async () => {
     try {
       const res = await axios.post(
-        `http://localhost:8000/api/v1/post/comment/${post._id}`,
+        `https://picx-kzg6.onrender.com/api/v1/post/comment/${post._id}`,
         { text: com },
         {
           headers: {
@@ -127,7 +127,7 @@ const Post = ({ post }) => {
 
   const bookmarkHandler = async () => {
     try {
-        const res = await axios.get(`http://localhost:8000/api/v1/post/bookmark/${post?._id}`, {withCredentials:true});
+        const res = await axios.get(`https://picx-kzg6.onrender.com/api/v1/post/bookmark/${post?._id}`, {withCredentials:true});
         if(res.data.success){
             toast.success(res.data.message);
         }

@@ -54,7 +54,7 @@ const CreatePost = ({ cre, setcre }) => {
     
       try {
         
-        const res = await axios.post("http://localhost:8000/api/v1/post/addpost",data, {
+        const res = await axios.post("https://picx-kzg6.onrender.com/api/v1/post/addpost",data, {
           headers:{
             'Content-Type':"multipart/form-data"
           },
@@ -66,7 +66,7 @@ const CreatePost = ({ cre, setcre }) => {
             //i have to refresh the page againa an again so i just fetch the data again
             // and dispatch it to the post array in  poststore
 
-            const updatedPosts = await axios.get("http://localhost:8000/api/v1/post/all", {
+            const updatedPosts = await axios.get("https://picx-kzg6.onrender.com/api/v1/post/all", {
               withCredentials: true,
             });
             dispatch(setPosts(updatedPosts.data.posts));

@@ -32,7 +32,7 @@ const Login = () => {
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:8000/api/v1/user/login",
+        "https://picx-kzg6.onrender.com/api/v1/user/login",
         input,
         {
           headers: {
