@@ -2,8 +2,7 @@
 
 Picx is a full-stack social media application that allows users to share photos, interact with others through posts, comments, and real-time messaging. This project is built with a modern tech stack using **Node.js, Express, MongoDB** for the backend and **React** for the frontend.
 
-## 🌐 Live Demo
-*Coming Soon...*
+## 🌐 Live Demo -> https://picx.devsurya.space
 
 ## Project Overview
 Picx is a fullstack social media platform focused on image sharing with social interactions. It allows users to upload posts, interact with content through likes and comments, follow other users, and send direct messages.
